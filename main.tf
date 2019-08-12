@@ -9,7 +9,7 @@ resource "aws_glue_catalog_database" "aws_glue_database" {
 
 resource "aws_glue_catalog_table" "aws_glue_table" {
   name          = "aqua-kinesis-glue-table"
-  database_name = "${aws_glue_catalog_database.aws_glue_database.name}"
+  database_name = "aqua-kinesis-glue-database"
 
   // Please refere the for more detail configuration of parameters at https://www.terraform.io/docs/providers/aws/r/glue_catalog_table.html
  /*
@@ -35,43 +35,59 @@ resource "aws_glue_catalog_table" "aws_glue_table" {
   }
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "firehose_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "firehose_stream" {	
   name        = "aqua-kinesis_firehose_delivery_stream"
-  destination = "extended_s3"
+  destination = "extended_s3" 					
 
   kinesis_source_configuration {
-    kinesis_stream_arn = aws_kinesis_stream.stream-init.arn
-    role_arn           = aws_iam_role.firehose_role.arn
+    kinesis_stream_arn = aws_kinesis_stream.stream-init.arn	
+    role_arn           = aws_iam_role.firehose_role.arn			
   }
 
-  //refer the more s3 configuration at https://docs.aws.amazon.com/firehose/latest/APIReference/API_ExtendedS3DestinationConfiguration.html
   extended_s3_configuration {
-    role_arn        = aws_iam_role.firehose_role.arn
-    bucket_arn      = var.s3_bucket_arn
-    buffer_size     = 100
-    buffer_interval = "300"
+    role_arn        = aws_iam_role.firehose_role.arn			
+    bucket_arn      = var.s3_bucket_arn					
+    buffer_size     = 100						
+    buffer_interval = "300"						
 
-    kms_key_arn = "data.aws_kms_alias.kms_encryption.arn"
+    kms_key_arn = data.aws_kms_alias.kms_encryption.arn		
 
-    data_format_conversion_configuration {
+    data_format_conversion_configuration {				  
       input_format_configuration {
-        deserializer {
-          hive_json_ser_de {}
+        deserializer {								
+          hive_json_ser_de {}						 
         }
       }
 
       output_format_configuration {
         serializer {
-          orc_ser_de {}
+          orc_ser_de {}							
         }
       }
 
       schema_configuration {
-        database_name = "aws_glue_catalog_table.aws_glue_table.database_name"
-        role_arn      = "aws_iam_role.firehose_role.arn"
-        table_name    = "aws_glue_catalog_table.aws_glue_table.name"
-        region        = "var.region"
+   	database_name = "aqua-kinesis-glue-database"	
+	role_arn      = aws_iam_role.firehose_role.arn			
+ 	table_name    = "aqua-kinesis-glue-table"		 
+        region        = "eu-west-1"						
       }
     }
   }
 }
+ // destination the firehose will be stored
+ // resource name for the kinesis stream used as the firehose source
+ // iam role that provides access to the source kinesis stream
+ // resource name for the firehose
+ // arn for the bucket
+  // size the incoming data is buffered into (in mb) before getting to the destination
+ // time period to which incoming data should be buffered
+ // KMS key ARN the stream will use for its data encryption
+ // argument for the de/serializer, schema configuration to convert data from JSON format to parquet or orc format before                                                                                writing to the s3 bucket
+  // the Apache Hive JSON SerDe that basically contains the time, date format
+// specifies to store in the ORC format before storage in the s3
+ // specifies to store in the ORC format before storage in the s3
+// specifies aws glue database that contains the schema for the output data
+ // role arn the stream uses to access the glue
+ // contains glue table that contains column details that constitutes schema info
+ // region for the resource
+

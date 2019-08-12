@@ -20,23 +20,30 @@ EOF
 
 resource "aws_iam_role_policy" "read_policy" {
   name = "firehose-role"
-  role = "aws_iam_role.firehose_role.id"
+  role = "${aws_iam_role.firehose_role.id}"
 
   policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
-       {
+       { 
             "Effect": "Allow",
             "Action": [
-                "kinesis:DescribeStream",
-                "kinesis:GetShardIterator",
-                "kinesis:GetRecords"
+                "kinesis:*"
             ],
             "Resource": [
-                "arn:aws:kinesis:eu-west-1:stream/${aws_kinesis_stream.stream-init.name}"
+                "*"
             ]
         },
+	{
+          "Effect": "Allow",
+          "Action": [
+              "glue:GetTableVersions"
+          ],
+          "Resource": [
+              "*"
+          ]
+       },
 	{
             "Effect": "Allow",
             "Action": [
@@ -46,33 +53,23 @@ resource "aws_iam_role_policy" "read_policy" {
               "arn:aws:s3:::kinesis",
               "arn:aws:s3:::kinesis/*"
             ]
-        }
-    ]
-},
-	{
-          "Effect": "Allow",
-          "Action": [
-              "glue:GetTableVersions"
-          ],
-          "Resource": [
-              "*"
-          ]
-      },
-	{
+        },
+ 	{
             "Effect": "Allow",
             "Action": [
               "sqs:*"
             ],
             "Resource": [
-              "arn:aws:sqs:::terraform_queue"
+              "arn:aws:sqs:::terraform_queue",
               "arn:aws:sqs:::terraform_queue/*"
             ]
         }
 
+    ]
+}
  
           
 EOF
 
 }
-
 
