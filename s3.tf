@@ -1,10 +1,15 @@
 resource "aws_s3_bucket" "Kinesis" {
   bucket = "stream-firehose-sqs"
-  acl    = "private"
+// bucket name to which the stream will be stored
+
+  acl    = "private" 
+// Access Control List set to private, can only be controlled by the user
 
   tags = {
-    Name = "Kinesis"
+// Name tag as would be displayed on the console
+    Name = "Kinesis" 
   }
 }
+ 
 
 
